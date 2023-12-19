@@ -20,10 +20,9 @@ class ObjectNoteProperty(bpy.types.PropertyGroup):
             ("Medium", "Medium", "Medium importance category"),
             ("Low", "Low", "Category of low importance"),
             ("No Category", "No Category", "Note without category"),
-            ("All", "All", "All categories")
         ],
         name="Category",
-        default="All"
+        default="No Category"
     )
 
 
@@ -109,8 +108,10 @@ class AddObjectNotePanel(bpy.types.Panel):
 
         row = layout.row()
         row.label(text="Category:")
-        row = layout.row()
-        row.prop(scene.object_notes_temp, "category", text="")
+
+        # Modifica esta línea para evitar que "All" esté disponible al crear una nueva nota
+        if not scene.object_notes_temp.is_edit_mode:
+            row.prop(scene.object_notes_temp, "category", text="")
 
         row = layout.row()
         if not scene.object_notes_temp.note_title or not scene.object_notes_temp.note_description:
@@ -151,7 +152,6 @@ class EditObjectNoteOperator(bpy.types.Operator):
         scene = context.scene
         note = scene.object_notes[self.note_index]
 
-        # Cambiamos el modo de edición al hacer clic en "Finish Edit"
         note.is_edit_mode = not note.is_edit_mode
 
         return {'FINISHED'}
