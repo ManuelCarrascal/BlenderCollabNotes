@@ -56,21 +56,34 @@ class ObjectNotesPanel(bpy.types.Panel):
 
             row = box.row()
             row.label(text="Category:")
-            split = row.split(align=True)
-            split.label(text=note.category, icon='BLANK1')
-            split.prop(note, "category", text="", emboss=False)
+
+            if note.is_edit_mode:
+                row.prop(note, "category", text="", emboss=False)
+            else:
+                row.label(text=note.category)
 
             row = box.row()
-            row.label(text=f"Title: {note.note_title}")
+
+            # Editable title
+            if note.is_edit_mode:
+                row.prop(note, "note_title", text="Title")
+            else:
+                row.label(text=f"Title: {note.note_title}")
+
             row = box.row()
-            row.label(text=f"Description: {note.note_description}")
+
+            # Editable description
+            if note.is_edit_mode:
+                row.prop(note, "note_description", text="Description")
+            else:
+                row.label(text=f"Description: {note.note_description}")
 
             row = box.row()
             if note.is_edit_mode:
-                row.operator("object.edit_object_note", text="Update").note_index = i
+                row.operator("object.edit_object_note", text="Finish Edit").note_index = i
             else:
                 row.operator("object.edit_object_note", text="Edit Note").note_index = i
-            row.operator("object.remove_object_note", text="Delete Note").note_index = i
+                row.operator("object.remove_object_note", text="Delete Note").note_index = i
 
 
 class AddObjectNotePanel(bpy.types.Panel):
@@ -83,8 +96,6 @@ class AddObjectNotePanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-
-        is_edit_mode = scene.object_notes_temp.is_edit_mode
 
         row = layout.row()
         row.label(text="Note Title:")
@@ -104,10 +115,7 @@ class AddObjectNotePanel(bpy.types.Panel):
         row = layout.row()
         if not scene.object_notes_temp.note_title or not scene.object_notes_temp.note_description:
             row.enabled = False
-        if is_edit_mode:
-            row.operator("object.edit_object_note", text="Update").note_index = scene.object_notes_temp.note_index
-        else:
-            row.operator("object.add_object_note", text="Add Note")
+        row.operator("object.add_object_note", text="Add Note")
 
 
 class AddObjectNoteOperator(bpy.types.Operator):
@@ -143,17 +151,8 @@ class EditObjectNoteOperator(bpy.types.Operator):
         scene = context.scene
         note = scene.object_notes[self.note_index]
 
-        if (note.note_title != scene.object_notes_temp.note_title or
-                note.note_description != scene.object_notes_temp.note_description):
-            note.note_title = scene.object_notes_temp.note_title
-            note.note_description = scene.object_notes_temp.note_description
-        else:
-            self.report({'INFO'}, "No changes were made to the note.")
-
+        # Cambiamos el modo de edición al hacer clic en "Finish Edit"
         note.is_edit_mode = not note.is_edit_mode
-
-        scene.object_notes_temp.note_title = ""
-        scene.object_notes_temp.note_description = ""
 
         return {'FINISHED'}
 
